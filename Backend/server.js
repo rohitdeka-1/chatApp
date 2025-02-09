@@ -19,7 +19,7 @@ main()
   });
 
 async function main() {
-  await mongoose.connect("mongodb://127.0.0.1:27017/chatApp");
+  await mongoose.connect(process.env.MONGO_URL);
 }
 
 const app = express();

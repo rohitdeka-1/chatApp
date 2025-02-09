@@ -20,7 +20,7 @@ const Home = () => {
   const handleSubmit = async(e) => {
     e.preventDefault();
     try{
-      const response = await axios.post("http://localhost:5000/api/register",User);
+      const response = await axios.post("https://chatapp-bzwq.onrender.com/api/register",User);
       console.log(response.data);
     }
     catch(err){

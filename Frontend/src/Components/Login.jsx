@@ -17,7 +17,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await axios.post("htpp://localhost:5000/api/login",User)
+    const response = await axios.post("https://chatapp-bzwq.onrender.com/api/login",User)
   };
 
   return (
