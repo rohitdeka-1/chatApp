@@ -33,7 +33,7 @@ app.get("/", (req, res) => {
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://chat-app-seven-dun.vercel.app","https://chat-rhd.netlify.app/meta.json","https://chatapp-front-062p.onrender.com"],
+    origin: ["http://localhost:5173", "https://chat-app-seven-dun.vercel.app", "https://chat-rhd.netlify.app", "https://chatapp-front-062p.onrender.com"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
