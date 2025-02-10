@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+
 const Login = () => {
+
+  const navigate = useNavigate();
+
   const [User, setUser] = useState({
     username: "",
     password: "",
@@ -18,13 +24,21 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("https://chatapp-bzwq.onrender.com/api/login", User);
+      const response = await axios.post(
+        "https://chatapp-bzwq.onrender.com/api/login",
+        // "http://localhost:5000/api/login",
+        User
+      );
+
+      if(response.status===200){
+        navigate("/chat")
+      }
       console.log("Login Success:", response.data);
     } catch (error) {
       console.error("Login Failed:", error.response?.data || error.message);
     }
   };
-  
+
   return (
     <div className="  min-h-screen background flex justify-center items-center">
       <div className=" mx-10 felx flex-col text-white font-bold text-3xl bg-slate-600 max-w-[600px] w-full min-h-[380px] m-auto rounded-xl ">
@@ -80,7 +94,15 @@ const Login = () => {
             >
               Submit
             </button>
-            <p className="text-sm font-thin">Don't have an account? <Link to="/" className="font-bold text-[#22c55e] hover:text-[#268e4d]" >Register</Link> </p>
+            <p className="text-sm font-thin">
+              Don't have an account?{" "}
+              <Link
+                to="/"
+                className="font-bold text-[#22c55e] hover:text-[#268e4d]"
+              >
+                Register
+              </Link>{" "}
+            </p>
           </form>
         </div>
       </div>

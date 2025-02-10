@@ -17,14 +17,17 @@ const Home = () => {
     }));
   };
 
-  const handleSubmit = async(e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    try{
-      const response = await axios.post("https://chatapp-bzwq.onrender.com/api/register",User);
+    try {
+      const response = await axios.post(
+        "https://chatapp-bzwq.onrender.com/api/register",
+        // "http://localhost:5000/api/register",
+        User
+      );
       console.log(response.data);
-    }
-    catch(err){
-      console.error("Error during signup")
+    } catch (err) {
+      console.error("Error during signup");
     }
   };
 
@@ -90,7 +93,7 @@ const Home = () => {
               <input
                 type="password"
                 className="grow px-2"
-                name="password" 
+                name="password"
                 placeholder="Password"
                 onChange={handleChange}
                 value={User.password}
@@ -104,7 +107,10 @@ const Home = () => {
             </button>
             <p className="text-sm font-thin ">
               Already have an account?{" "}
-              <Link className="font-bold text-[#22c55e] hover:text-[#268e4d] " to="/login">
+              <Link
+                className="font-bold text-[#22c55e] hover:text-[#268e4d] "
+                to="/login"
+              >
                 Login
               </Link>
             </p>
