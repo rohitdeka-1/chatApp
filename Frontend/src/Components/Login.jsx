@@ -67,9 +67,9 @@ const Login = () => {
               </svg>
               <input
                 type="password"
-                className="grow"
+                className="grow px-2"
                 name="password"
-                placeholder="  Password"
+                placeholder="Password"
                 onChange={handleChange}
                 value={User.password}
               />
