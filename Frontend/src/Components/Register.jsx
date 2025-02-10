@@ -22,7 +22,7 @@ const Home = () => {
     try {
       const response = await axios.post(
         // "https://chatapp-bzwq.onrender.com/api/register",
-        "https://chat-rhd-89a61bcf5e5a.herokuapp.com/",
+        "https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/register",
         // "http://localhost:5000/api/register",
         User
       );
