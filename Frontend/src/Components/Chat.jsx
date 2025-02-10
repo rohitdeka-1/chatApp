@@ -95,8 +95,8 @@ function Chat() {
                   <span
                     className={`text-sm p-2 leading-3 rounded-lg ${
                       msg.sender === user
-                        ? "bg-green-600 text-white"
-                        : "bg-gray-500 text-white"
+                        ? "bg-[#7d59b6] text-white"
+                        : "bg-[#3cf63c88] text-white"
                     }`}
                   >
                     {msg.message}
@@ -114,7 +114,7 @@ function Chat() {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="input input-bordered flex-1 text-black p-2 rounded-lg"
+                className="input input-bordered flex-1 text-white p-2 rounded-lg"
               />
               <button
                 onClick={sendMessage}
