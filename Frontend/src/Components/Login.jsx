@@ -22,11 +22,12 @@ const Login = ({ setIsLoggedIn }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post(
-                "https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/login",
-                User
-            );
-
+          const response = await axios.post(
+            // "https://chatapp-bzwq.onrender.com/api/login",
+            "https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/login",
+            // "http://localhost:5000/api/login",
+            User
+          );
             if (response.status === 200) {
                 localStorage.setItem("token", response.data.token);
                 setIsLoggedIn(true); 
@@ -38,6 +39,7 @@ const Login = ({ setIsLoggedIn }) => {
             console.error("Login Failed:", error.response?.data || error.message);
         }
     };
+      
 
     return (
         <div className="min-h-screen background flex justify-center items-center">
