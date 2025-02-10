@@ -26,7 +26,7 @@ const Login = () => {
     try {
       const response = await axios.post(
         // "https://chatapp-bzwq.onrender.com/api/login",
-        "https://chat-rhd-89a61bcf5e5a.herokuapp.com/",
+        "https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/login",
         // "http://localhost:5000/api/login",
         User
       );
