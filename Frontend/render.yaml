@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: chatApp-front
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: Frontend/dist
+    headers:
+      - source: /*
+        headers:
+          - key: Cache-Control
+            value: no-cache
+    redirects:
+      - source: /*
+        destination: /index.html
+        status: 200
