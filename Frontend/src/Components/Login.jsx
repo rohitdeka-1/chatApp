@@ -17,9 +17,14 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await axios.post("https://chatapp-bzwq.onrender.com/api/login",User)
+    try {
+      const response = await axios.post("https://chatapp-bzwq.onrender.com/api/login", User);
+      console.log("Login Success:", response.data);
+    } catch (error) {
+      console.error("Login Failed:", error.response?.data || error.message);
+    }
   };
-
+  
   return (
     <div className="  min-h-screen background flex justify-center items-center">
       <div className=" mx-10 felx flex-col text-white font-bold text-3xl bg-slate-600 max-w-[600px] w-full min-h-[380px] m-auto rounded-xl ">

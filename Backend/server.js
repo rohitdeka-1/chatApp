@@ -75,30 +75,34 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-
+router.post("/api/login", async (req, res) => {
   try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
     const user = await User.findOne({ username });
     if (!user) {
-      return res.status(400).send("User not found.");
+      return res.status(404).json({ error: "User not found" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).send("Invalid credentials.");
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
-    return res.status(200).json({ token });
+    res.status(200).json({ token });
   } catch (error) {
-    console.error(error);
-    return res.status(500).send("Server error.");
+    console.error("Login Error:", error);
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
   }
 });
+
 
 app.listen(PORT, () => {
   console.log(`Running on port ${PORT}`);
