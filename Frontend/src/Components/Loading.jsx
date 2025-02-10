@@ -25,39 +25,7 @@ const Loading = ({ onComplete }) => {
 
   return (
     <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
-          className="fixed inset-0 flex items-center justify-center bg-gray-900 overflow-hidden"
-        >
-          <motion.div
-            className="absolute inset-0 bg-white"
-            variants={slideVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          />
-          <motion.div
-            className="absolute inset-0 bg-gray-300"
-            variants={slideVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ ...slideVariants.transition, delay: 0.1 }}
-          />
-          <motion.div
-            className="absolute inset-0 bg-cream-100"
-            variants={slideVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ ...slideVariants.transition, delay: 0.2 }}
-          />
-
-          <div className="relative z-10 text-center">
+          <div className="relative z-10 flex justify-center items-center min-h-screen text-center">
             <motion.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -75,8 +43,7 @@ const Loading = ({ onComplete }) => {
               </motion.span>
             </motion.p>
           </div>
-        </motion.div>
-      )}
+    
     </AnimatePresence>
   )
 }
