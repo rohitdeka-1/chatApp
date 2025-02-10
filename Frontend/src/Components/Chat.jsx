@@ -70,7 +70,7 @@ function Chat() {
               placeholder="Enter Room ID"
               value={roomID}
               onChange={(e) => setRoomID(e.target.value)}
-              className="input input-bordered text-black p-2 rounded-lg"
+              className="input input-bordered text-white p-2 rounded-lg"
             />
             <button
               onClick={joinRoom}
