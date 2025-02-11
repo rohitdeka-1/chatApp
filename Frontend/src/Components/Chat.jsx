@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import io from "socket.io-client";
-import axios from "axios";
 
-// Function to get the JWT token from the browser's cookies
 const getTokenFromCookies = () => {
   return document.cookie
     .split("; ")
@@ -10,7 +8,6 @@ const getTokenFromCookies = () => {
     ?.split("=")[1];
 };
 
-// Initialize socket connection with the JWT token for authentication
 const socket = io("https://chat-rhd-89a61bcf5e5a.herokuapp.com/", {
   auth: { token: getTokenFromCookies() },
 });
@@ -19,17 +16,15 @@ function Chat() {
   const [roomID, setRoomID] = useState("");
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [user, setUser] = useState("");
+  const [user, setUser] = useState(localStorage.getItem("username") || "Guest");
   const [inRoom, setInRoom] = useState(false);
   const chatContainerRef = useRef(null);
   const messageInputRef = useRef(null);
 
-
   const systemMessage = {
     sender: "System",
-    message: "Welcome! Your chats are secure and encrypted. Happy chatting!",
+    message: "Welcome! Your chats are secure. Be polite or face suspension. Happy chatting!",
   };
-
 
   const scrollToBottom = useCallback(() => {
     if (chatContainerRef.current) {
@@ -40,22 +35,7 @@ function Chat() {
     }
   }, []);
 
-
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await axios.get("http://localhost:5000/api/user", {
-          withCredentials: true,
-        });
-        
-        setUser(response.data.username);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-
-    fetchUserData();
-
     socket.on("receive_message", (data) => {
       setMessages((prevMessages) => [...prevMessages, data]);
       setTimeout(scrollToBottom, 100);
@@ -66,30 +46,14 @@ function Chat() {
     };
   }, [scrollToBottom]);
 
-
   const joinRoom = useCallback(() => {
     if (roomID) {
       socket.emit("join_room", roomID);
       setInRoom(true);
-
-      axios
-        .get(
-          `https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/messages/${roomID}`,
-          { withCredentials: true }
-        )
-        .then((res) => {
-          const updatedMessages =
-            res.data.length > 0 && res.data[0].message === systemMessage.message
-              ? res.data
-              : [systemMessage, ...res.data];
-
-          setMessages(updatedMessages);
-          setTimeout(scrollToBottom, 100);
-        })
-        .catch((err) => console.error("Error fetching messages:", err));
+      setMessages([systemMessage]);
+      setTimeout(scrollToBottom, 100);
     }
   }, [roomID, scrollToBottom]);
-
 
   const sendMessage = useCallback(
     (e) => {
@@ -110,9 +74,7 @@ function Chat() {
     <div className="flex flex-col h-screen w-full bg-gray-900">
       {!inRoom ? (
         <div className="flex flex-col items-center justify-center h-full p-6">
-          <h2 className="text-xl text-white font-semibold mb-4">
-            Enter Chat Room
-          </h2>
+          <h2 className="text-xl text-white font-semibold mb-4">Enter Chat Room</h2>
           <input
             type="text"
             placeholder="Enter Room ID"
@@ -132,34 +94,17 @@ function Chat() {
           <div className="p-4 text-white font-bold bg-gray-800 border-b border-gray-700">
             SERVER: {roomID}
           </div>
-          <div
-            ref={chatContainerRef}
-            className="flex-1 overflow-y-auto p-4 space-y-3"
-          >
+          <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex flex-col ${
-                  msg.sender === user ? "items-end" : "items-start"
-                }`}
-              >
-                <div
-                  className={`max-w-xs p-3 rounded-lg shadow-md ${
-                    msg.sender === user
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-700 text-gray-200"
-                  }`}
-                >
+              <div key={index} className={`flex flex-col ${msg.sender === user ? "items-end" : "items-start"}`}>
+                <div className={`max-w-xs p-3 rounded-lg shadow-md ${msg.sender === user ? "bg-blue-500 text-white" : "bg-gray-700 text-gray-200"}`}>
                   <p className="text-sm">{msg.message}</p>
                 </div>
                 <p className="text-xs mt-1 text-gray-400">{msg.sender}</p>
               </div>
             ))}
           </div>
-          <form
-            onSubmit={sendMessage}
-            className="w-full bg-gray-800 p-4 flex gap-2"
-          >
+          <form onSubmit={sendMessage} className="w-full bg-gray-800 p-4 flex gap-2">
             <input
               ref={messageInputRef}
               type="text"
@@ -168,10 +113,7 @@ function Chat() {
               onChange={(e) => setNewMessage(e.target.value)}
               className="flex-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500"
             />
-            <button
-              type="submit"
-              className="p-3 rounded-lg bg-green-600 text-white font-bold hover:bg-green-700 transition-colors"
-            >
+            <button type="submit" className="p-3 rounded-lg bg-green-600 text-white font-bold hover:bg-green-700 transition-colors">
               Send
             </button>
           </form>
