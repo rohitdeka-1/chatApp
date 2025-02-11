@@ -19,7 +19,7 @@ function Chat() {
   const systemMessage = {
     sender: "System",
     message:
-      "Looking for a secure and reliable chat application? Look no further! My chat app is designed to provide a seamless and private chatting experience. With an intuitive user interface and smooth real-time messaging powered by Socket.io, you can connect with your friends and join chat rooms effortlessly.\n\nSecurity is a top priority! Your passwords are hashed using a one-way hashing technique, ensuring that your sensitive information remains protected. Even if someone gains access to the database, they won’t be able to retrieve your original password. This makes my chat app not only fun but also safe and secure.\n\nInvite your friends to join and experience a modern, privacy-focused chatting platform. Start chatting now and enjoy the convenience of secure communication!",
+      "Looking for a secure and reliable chat application? Look no further! My chat app is designed to provide a seamless and private chatting experience. With an intuitive user interface and smooth real-time messaging powered by Socket.io, you can connect with your friends and join chat rooms effortlessly.\n\nSecurity is a top priority! Your passwords are hashed using a one-way hashing technique, ensuring that your sensitive information remains protected. This makes my chat app not only fun but also safe and secure.\n\nInvite your friends to join and experience a modern, privacy-focused chatting platform. Start chatting now and enjoy the convenience of secure communication!",
   }
 
   // Scroll to bottom function
