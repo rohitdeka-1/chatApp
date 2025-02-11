@@ -37,7 +37,7 @@ const router = Router();
 
 app.use(express.json());
 
-// CORS configuration
+
 app.use(
   cors({
     origin: ["http://localhost:5173", "https://chat-app-seven-dun.vercel.app", "https://chat-rhd.netlify.app", "https://chatapp-front-062p.onrender.com"],
@@ -117,7 +117,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Middleware to authenticate WebSocket connections
+
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) {
@@ -126,7 +126,7 @@ io.use((socket, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    socket.user = decoded; // Attach user information to the socket
+    socket.user = decoded; 
     next();
   } catch (error) {
     return next(new Error("Authentication error: Invalid token"));
@@ -144,7 +144,7 @@ io.on("connection", (socket) => {
   socket.on("message", async (data) => {
     const { room, message } = data;
 
-    // Validate that the sender matches the authenticated user
+  
     if (data.sender !== socket.user.username) {
       console.error("Unauthorized message attempt by:", socket.user.username);
       return;

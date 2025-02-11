@@ -2,7 +2,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import io from "socket.io-client";
 import axios from "axios";
 
-const socket = io("https://chat-rhd-89a61bcf5e5a.herokuapp.com/");
+const socket = io("https://chat-rhd-89a61bcf5e5a.herokuapp.com/", {
+  auth: {
+    token: localStorage.getItem("token"), // Send the JWT token during WebSocket handshake
+  },
+});
 
 function Chat() {
   const [roomID, setRoomID] = useState("");
