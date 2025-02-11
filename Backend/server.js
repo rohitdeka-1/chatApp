@@ -13,7 +13,8 @@ import cookieParser from "cookie-parser";
 dotenv.config();
 const PORT = process.env.PORT || 5000;
 
-mongoose.connect(process.env.MONGO_URL)
+mongoose
+  .connect(process.env.MONGO_URL)
   .then(() => console.log("Mongoose Connected"))
   .catch((err) => console.error(err));
 
@@ -21,7 +22,12 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:5173", "https://chat-app-seven-dun.vercel.app", "https://chat-rhd.netlify.app", "https://chatapp-front-062p.onrender.com"],
+    origin: [
+      "http://localhost:5173",
+      "https://chat-app-seven-dun.vercel.app",
+      "https://chat-rhd.netlify.app",
+      "https://chatapp-front-062p.onrender.com",
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -30,6 +36,21 @@ const io = new Server(server, {
 app.use(express.json());
 app.use(cookieParser());
 
+
+const verifyToken = (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized - No token provided" });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: "Forbidden - Invalid token" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
 
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
@@ -71,7 +92,6 @@ io.on("connection", (socket) => {
   });
 });
 
-
 const router = Router();
 app.use("/api", router);
 
@@ -95,7 +115,8 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ error: "All fields are required" });
+    if (!username || !password)
+      return res.status(400).json({ error: "All fields are required" });
 
     const user = await User.findOne({ username });
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -103,24 +124,43 @@ router.post("/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ error: "Invalid credentials" });
 
-    const token = jwt.sign({ userId: user._id, username: user.username }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign(
+      { userId: user._id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
-    res.cookie("token", token, { httpOnly: true, secure: true, sameSite: "None" });
-    res.status(200).json({ message: "Login successful" });
+    res
+      .cookie("token", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
+      })
+      .status(200)
+      .json({ message: "Login successful" });
   } catch (error) {
     console.error("Login Error:", error);
-    res.status(500).json({ error: "Internal Server Error", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Internal Server Error", details: error.message });
   }
 });
 
-
-router.get("/messages/:roomID", async (req, res) => {
+router.get("/messages/:roomID", verifyToken, async (req, res) => {
   try {
-    const messages = await Message.find({ room: req.params.roomID }).sort("timestamp");
+    const messages = await Message.find({ room: req.params.roomID }).sort(
+      "timestamp"
+    );
     res.json(messages);
   } catch (error) {
     res.status(500).send(error);
   }
+});
+
+ 
+router.get("/user", verifyToken, (req, res) => {
+  
+  res.json({ userId: req.user.userId, username: req.user.username });
 });
 
 server.listen(PORT, () => {

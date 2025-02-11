@@ -37,10 +37,19 @@ function Chat() {
   }, []);
 
   useEffect(() => {
-    axios
-      .get("/api/auth")
-      .then((res) => setUser(res.data.username))
-      .catch((err) => console.error("Error fetching user:", err));
+    // Fetch the username
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get(
+          "https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/user"
+        );
+        setUser(response.data.username);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
 
     socket.on("receive_message", (data) => {
       setMessages((prevMessages) => [...prevMessages, data]);
@@ -57,8 +66,11 @@ function Chat() {
       socket.emit("join_room", roomID);
       setInRoom(true);
 
+      // Fetch chat history for the room
       axios
-        .get(`https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/messages/${roomID}`)
+        .get(
+          `https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/messages/${roomID}`
+        )
         .then((res) => {
           const updatedMessages =
             res.data.length > 0 && res.data[0].message === systemMessage.message
@@ -75,13 +87,20 @@ function Chat() {
   const sendMessage = useCallback(
     (e) => {
       e.preventDefault();
-      if (newMessage && roomID) {
+      if (newMessage.trim() && roomID) {
         const messageData = { room: roomID, sender: user, message: newMessage };
+
+        // Send message to server
         socket.emit("message", messageData);
+
+        // Display the message locally without repeating
         setMessages((prevMessages) => [...prevMessages, messageData]);
         setNewMessage("");
+
+        // Scroll to bottom
         setTimeout(scrollToBottom, 100);
 
+        // Focus input after sending
         if (messageInputRef.current) {
           messageInputRef.current.focus();
         }
@@ -119,21 +138,25 @@ function Chat() {
           {/* Chat Messages */}
           <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.map((msg, index) => (
-              <div key={index} className={`flex ${msg.sender === user ? "justify-end" : "justify-start"}`}>
+              <div
+                key={index}
+                className={`flex ${msg.sender === user ? "justify-end" : "justify-start"}`}
+              >
                 <div
-                  className={`max-w-xs p-3 rounded-lg shadow-lg ${
+                  className={`max-w-xs p-3 rounded-lg shadow-md ${
                     msg.sender === user ? "bg-blue-500 text-white" : "bg-gray-700 text-gray-200"
                   }`}
                 >
-                  <p className="text-sm font-semibold">{msg.sender}</p>
-                  <p>{msg.message}</p>
+                  <p className="text-sm">{msg.message}</p>
+                  {/* Sender's name below the message */}
+                  <p className="text-xs  mt-1">{msg.sender}</p>
                 </div>
               </div>
             ))}
           </div>
 
           {/* Chat Input */}
-          <form onSubmit={sendMessage} className="fixed bottom-0 w-full bg-gray-800 p-4 flex gap-2">
+          <form onSubmit={sendMessage} className="w-full bg-gray-800 p-4 flex gap-2">
             <input
               ref={messageInputRef}
               type="text"

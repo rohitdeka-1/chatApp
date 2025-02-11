@@ -29,7 +29,7 @@ const Home = () => {
     const { name, value } = event.target;
     setUser((prev) => ({
       ...prev,
-      [name]: DOMPurify.sanitize(value.trim()),  
+      [name]: DOMPurify.sanitize(value.trim()),
     }));
   };
 
@@ -51,7 +51,7 @@ const Home = () => {
       const response = await axios.post(
         "https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/register",
         User,
-        { withCredentials: true }  
+        { withCredentials: true }
       );
 
       if (response.status === 201) {
