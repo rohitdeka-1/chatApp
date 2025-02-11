@@ -15,7 +15,12 @@ const Home = () => {
   const [registered, setRegistered] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  
+  // Email validation regex
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    return emailRegex.test(email);
+  };
+
   const isStrongPassword = (password) => {
     return password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password);
   };
@@ -30,7 +35,12 @@ const Home = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage("");  
+    setErrorMessage("");
+
+    if (!isValidEmail(User.email)) {
+      setErrorMessage("Please enter a valid email address.");
+      return;
+    }
 
     if (!isStrongPassword(User.password)) {
       setErrorMessage("Password must be at least 8 characters, with 1 uppercase and 1 number.");

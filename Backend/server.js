@@ -30,7 +30,7 @@ const io = new Server(server, {
 app.use(express.json());
 app.use(cookieParser());
 
-// Middleware to check authentication in WebSockets
+
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) {
@@ -71,7 +71,7 @@ io.on("connection", (socket) => {
   });
 });
 
-// Authentication routes
+
 const router = Router();
 app.use("/api", router);
 
@@ -113,7 +113,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Fetch messages for a room
+
 router.get("/messages/:roomID", async (req, res) => {
   try {
     const messages = await Message.find({ room: req.params.roomID }).sort("timestamp");

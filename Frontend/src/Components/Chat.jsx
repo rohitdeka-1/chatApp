@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import io from "socket.io-client";
 import axios from "axios";
 
-// Fetch JWT from secure HTTP-only cookie
 const getTokenFromCookies = () => {
   return document.cookie
     .split("; ")
@@ -20,37 +19,38 @@ function Chat() {
   const [newMessage, setNewMessage] = useState("");
   const [user, setUser] = useState("");
   const [inRoom, setInRoom] = useState(false);
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const chatContainerRef = useRef(null);
   const messageInputRef = useRef(null);
 
-  // System message for new users
   const systemMessage = {
     sender: "System",
     message: "Welcome! Your chats are secure and encrypted. Happy chatting!",
   };
 
-  // Scroll to bottom function
   const scrollToBottom = useCallback(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
     }
   }, []);
 
   useEffect(() => {
-    axios.get("/api/auth")
+    axios
+      .get("/api/auth")
       .then((res) => setUser(res.data.username))
       .catch((err) => console.error("Error fetching user:", err));
 
     socket.on("receive_message", (data) => {
       setMessages((prevMessages) => [...prevMessages, data]);
-      if (shouldAutoScroll) setTimeout(scrollToBottom, 100);
+      setTimeout(scrollToBottom, 100);
     });
 
     return () => {
       socket.off("receive_message");
     };
-  }, [scrollToBottom, shouldAutoScroll]);
+  }, [scrollToBottom]);
 
   const joinRoom = useCallback(() => {
     if (roomID) {
@@ -78,15 +78,16 @@ function Chat() {
       if (newMessage && roomID) {
         const messageData = { room: roomID, sender: user, message: newMessage };
         socket.emit("message", messageData);
+        setMessages((prevMessages) => [...prevMessages, messageData]);
         setNewMessage("");
-        setShouldAutoScroll(true);
+        setTimeout(scrollToBottom, 100);
 
         if (messageInputRef.current) {
           messageInputRef.current.focus();
         }
       }
     },
-    [newMessage, roomID, user]
+    [newMessage, roomID, user, scrollToBottom]
   );
 
   return (
@@ -110,23 +111,28 @@ function Chat() {
         </div>
       ) : (
         <>
-          <div className="p-4 text-white font-bold bg-gray-800 border-b border-gray-700">SERVER: {roomID}</div>
+          {/* Room Info */}
+          <div className="p-4 text-white font-bold bg-gray-800 border-b border-gray-700">
+            SERVER: {roomID}
+          </div>
 
+          {/* Chat Messages */}
           <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.map((msg, index) => (
-              <div key={index} className={`flex flex-col ${msg.sender === user ? "items-end" : "items-start"}`}>
+              <div key={index} className={`flex ${msg.sender === user ? "justify-end" : "justify-start"}`}>
                 <div
                   className={`max-w-xs p-3 rounded-lg shadow-lg ${
-                    msg.sender === user ? "bg-blue-500 text-white self-end" : "bg-gray-700 text-gray-200 self-start"
+                    msg.sender === user ? "bg-blue-500 text-white" : "bg-gray-700 text-gray-200"
                   }`}
                 >
+                  <p className="text-sm font-semibold">{msg.sender}</p>
                   <p>{msg.message}</p>
                 </div>
-                <span className="text-xs mt-1 text-gray-400">{msg.sender}</span>
               </div>
             ))}
           </div>
 
+          {/* Chat Input */}
           <form onSubmit={sendMessage} className="fixed bottom-0 w-full bg-gray-800 p-4 flex gap-2">
             <input
               ref={messageInputRef}
@@ -138,7 +144,7 @@ function Chat() {
             />
             <button
               type="submit"
-              className="p-3 rounded-lg bg-gray-600 text-white font-bold hover:bg-green-700 transition-colors"
+              className="p-3 rounded-lg bg-green-600 text-white font-bold hover:bg-green-700 transition-colors"
             >
               Send
             </button>
