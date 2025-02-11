@@ -20,24 +20,27 @@ mongoose
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: [
-      "http://localhost:5173",
-      "https://chat-app-seven-dun.vercel.app",
-      "https://chat-rhd.netlify.app",
-      "https://chatapp-front-062p.onrender.com",
-    ],
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-});
+
+
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "https://chat-app-seven-dun.vercel.app",
+    "https://chat-rhd.netlify.app",
+    "https://chatapp-front-062p.onrender.com",
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(cookieParser());
 
 
 const verifyToken = (req, res, next) => {
+  console.log("Received Cookies:", req.cookies);
+
   const token = req.cookies.token;
   if (!token) {
     return res.status(401).json({ error: "Unauthorized - No token provided" });
@@ -51,6 +54,11 @@ const verifyToken = (req, res, next) => {
     next();
   });
 };
+
+
+const io = new Server(server, {
+  cors: corsOptions,
+});
 
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
@@ -92,8 +100,10 @@ io.on("connection", (socket) => {
   });
 });
 
+
 const router = Router();
 app.use("/api", router);
+
 
 router.post("/register", async (req, res) => {
   const { email, username, password } = req.body;
@@ -111,6 +121,7 @@ router.post("/register", async (req, res) => {
     res.status(500).send("Server error.");
   }
 });
+
 
 router.post("/login", async (req, res) => {
   try {
@@ -133,8 +144,9 @@ router.post("/login", async (req, res) => {
     res
       .cookie("token", token, {
         httpOnly: true,
-        secure: true,
-        sameSite: "None",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+        maxAge: 3600000, // 1 hour
       })
       .status(200)
       .json({ message: "Login successful" });
@@ -157,10 +169,24 @@ router.get("/messages/:roomID", verifyToken, async (req, res) => {
   }
 });
 
- 
-router.get("/user", verifyToken, (req, res) => {
-  
-  res.json({ userId: req.user.userId, username: req.user.username });
+router.get("/user", verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select("-password"); // Exclude password
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json({ username: user.username, email: user.email });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.post("/logout", (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+  }).json({ message: "Logged out successfully" });
 });
 
 server.listen(PORT, () => {
