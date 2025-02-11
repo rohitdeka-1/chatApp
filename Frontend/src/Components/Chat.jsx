@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect, useRef, useCallback } from "react"
 import io from "socket.io-client"
 import axios from "axios"
@@ -14,9 +12,15 @@ function Chat() {
   const [inRoom, setInRoom] = useState(false)
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
   const chatContainerRef = useRef(null)
-  const latestMessageRef = useRef(null)
   const messageInputRef = useRef(null)
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true)
+
+  // System message
+  const systemMessage = {
+    sender: "System",
+    message:
+      "Looking for a secure and reliable chat application? Look no further! My chat app is designed to provide a seamless and private chatting experience. With an intuitive user interface and smooth real-time messaging powered by Socket.io, you can connect with your friends and join chat rooms effortlessly.\n\nSecurity is a top priority! Your passwords are hashed using a one-way hashing technique, ensuring that your sensitive information remains protected. Even if someone gains access to the database, they won’t be able to retrieve your original password. This makes my chat app not only fun but also safe and secure.\n\nInvite your friends to join and experience a modern, privacy-focused chatting platform. Start chatting now and enjoy the convenience of secure communication!",
+  }
 
   // Scroll to bottom function
   const scrollToBottom = useCallback(() => {
@@ -34,45 +38,13 @@ function Chat() {
 
     socket.on("receive_message", (data) => {
       setMessages((prevMessages) => [...prevMessages, data])
-      // Force scroll to bottom on new messages if auto-scroll is enabled
-      if (shouldAutoScroll) {
-        setTimeout(scrollToBottom, 100)
-      }
+      if (shouldAutoScroll) setTimeout(scrollToBottom, 100)
     })
-
-    // Detect keyboard visibility using visual viewport
-    const handleVisualViewportResize = () => {
-      const isKeyboard = window.visualViewport.height < window.innerHeight * 0.8
-      setIsKeyboardOpen(isKeyboard)
-
-      if (isKeyboard && shouldAutoScroll) {
-        setTimeout(scrollToBottom, 100)
-      }
-    }
-
-    window.visualViewport.addEventListener("resize", handleVisualViewportResize)
 
     return () => {
       socket.off("receive_message")
-      window.visualViewport.removeEventListener("resize", handleVisualViewportResize)
     }
   }, [shouldAutoScroll, scrollToBottom])
-
-  // Handle scroll events to determine if we should auto-scroll
-  const handleScroll = useCallback(() => {
-    if (chatContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current
-      const isAtBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 50
-      setShouldAutoScroll(isAtBottom)
-    }
-  }, [])
-
-  // Effect to handle new messages
-  useEffect(() => {
-    if (shouldAutoScroll && messages.length > 0) {
-      scrollToBottom()
-    }
-  }, [messages, shouldAutoScroll, scrollToBottom])
 
   const joinRoom = useCallback(() => {
     if (roomID) {
@@ -82,28 +54,27 @@ function Chat() {
       axios
         .get(`https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/messages/${roomID}`)
         .then((res) => {
-          setMessages(res.data)
-          // Scroll to bottom after loading initial messages
+          const updatedMessages =
+            res.data.length > 0 && res.data[0].message === systemMessage.message
+              ? res.data
+              : [systemMessage, ...res.data]
+
+          setMessages(updatedMessages)
           setTimeout(scrollToBottom, 100)
         })
         .catch((err) => console.error("Error fetching messages:", err))
     }
-  }, [roomID, scrollToBottom])
+  }, [roomID, scrollToBottom, systemMessage])
 
   const sendMessage = useCallback(
     (e) => {
       e.preventDefault()
       if (newMessage && roomID) {
-        const messageData = {
-          room: roomID,
-          sender: user,
-          message: newMessage,
-        }
+        const messageData = { room: roomID, sender: user, message: newMessage }
         socket.emit("message", messageData)
         setNewMessage("")
-        setShouldAutoScroll(true) // Enable auto-scroll when sending a message
+        setShouldAutoScroll(true)
 
-        // Keep focus on input after sending
         if (messageInputRef.current) {
           messageInputRef.current.focus()
         }
@@ -138,17 +109,10 @@ function Chat() {
           <div
             ref={chatContainerRef}
             className="flex-1 overflow-y-auto p-4 space-y-3"
-            onScroll={handleScroll}
-            style={{
-              paddingBottom: isKeyboardOpen ? "120px" : "80px",
-            }}
+            style={{ paddingBottom: isKeyboardOpen ? "120px" : "80px" }}
           >
             {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex flex-col ${msg.sender === user ? "items-end" : "items-start"}`}
-                ref={index === messages.length - 1 ? latestMessageRef : null}
-              >
+              <div key={index} className={`flex flex-col ${msg.sender === user ? "items-end" : "items-start"}`}>
                 <div
                   className={`max-w-xs p-3 rounded-lg shadow-lg ${
                     msg.sender === user ? "bg-blue-500 text-white self-end" : "bg-gray-700 text-gray-200 self-start"
@@ -184,4 +148,3 @@ function Chat() {
 }
 
 export default Chat
-
