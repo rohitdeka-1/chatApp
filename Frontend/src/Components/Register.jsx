@@ -122,7 +122,7 @@ const Home = () => {
               </label>
               <button
                 type="submit"
-                className="text-sm   bg-slate-400 rounded h-9 shadrop"
+                className="text-sm   bg-slate-300 rounded h-9 shadrop hover:bg-slate-400" 
               >
                 Submit
               </button>

@@ -23,7 +23,7 @@ const Login = ({ setIsLoggedIn }) => {
         e.preventDefault();
         try {
             const response = await axios.post(
-                "http://localhost:5000/api/login", // Replace with your deployed URL
+                "https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/login", // Replace with your deployed URL
                 User
             );
             if (response.status === 200) {
@@ -101,7 +101,7 @@ const Login = ({ setIsLoggedIn }) => {
                         </label>
                         <button
                             type="submit"
-                            className="text-sm bg-slate-400 rounded h-9 bg shadrop"
+                            className="bg-slate-300 text-sm rounded h-9 shadrop hover:bg-slate-400"
                         >
                             Submit
                         </button>
