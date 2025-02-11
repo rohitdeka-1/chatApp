@@ -87,11 +87,11 @@ function Chat() {
             placeholder="Enter Room ID"
             value={roomID}
             onChange={(e) => setRoomID(e.target.value)}
-            className="w-64 p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-64 p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500"
           />
           <button
             onClick={joinRoom}
-            className="w-64 mt-4 p-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors"
+            className="w-64 mt-4 p-3 rounded-lg bg-gray-600 text-white font-bold hover:bg-gray-500 transition-colors"
           >
             Join Room
           </button>
@@ -99,8 +99,8 @@ function Chat() {
       ) : (
         <>
           {/* Chat Header */}
-          <div className="p-4 text-white font-semibold bg-gray-800 border-b border-gray-700">
-            Chat Room: {roomID}
+          <div className="p-4 text-white font-bold bg-gray-800 border-b border-gray-700">
+            SERVER: {roomID}
           </div>
 
           {/* Chat Messages - Full Screen */}
@@ -135,11 +135,11 @@ function Chat() {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500"
             />
             <button
               onClick={sendMessage}
-              className="p-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors"
+              className="p-3 rounded-lg bg-gray-600 text-white font-bold hover:bg-green-700 transition-colors"
             >
               Send
             </button>
