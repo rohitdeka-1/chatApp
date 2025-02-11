@@ -15,7 +15,7 @@ const Home = () => {
   const [registered, setRegistered] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Password Strength Validation
+  
   const isStrongPassword = (password) => {
     return password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password);
   };
@@ -24,13 +24,13 @@ const Home = () => {
     const { name, value } = event.target;
     setUser((prev) => ({
       ...prev,
-      [name]: DOMPurify.sanitize(value.trim()), // Sanitize and remove leading/trailing spaces
+      [name]: DOMPurify.sanitize(value.trim()),  
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage(""); // Reset error message
+    setErrorMessage("");  
 
     if (!isStrongPassword(User.password)) {
       setErrorMessage("Password must be at least 8 characters, with 1 uppercase and 1 number.");
@@ -41,7 +41,7 @@ const Home = () => {
       const response = await axios.post(
         "https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/register",
         User,
-        { withCredentials: true } // Enables HTTP-only cookie storage
+        { withCredentials: true }  
       );
 
       if (response.status === 201) {

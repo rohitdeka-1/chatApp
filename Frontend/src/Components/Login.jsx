@@ -28,7 +28,7 @@ const Login = ({ setIsLoggedIn }) => {
             const response = await axios.post(
                 "https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/login",
                 User,
-                { withCredentials: true } // Secure cookie handling
+                { withCredentials: true }  
             );
 
             if (response.status === 200) {
