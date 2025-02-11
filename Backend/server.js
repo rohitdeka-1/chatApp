@@ -1,4 +1,5 @@
 import express, { Router } from "express";
+import { chats } from "./data/data.js";
 import dotenv from "dotenv";
 import cors from "cors";
 import mongoose from "mongoose";
@@ -8,148 +9,106 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Server } from "socket.io";
 import http from "http";
-import cookieParser from "cookie-parser";
 
 dotenv.config();
 const PORT = process.env.PORT || 5000;
 
-mongoose
-  .connect(process.env.MONGO_URL)
-  .then(() => console.log("Mongoose Connected"))
-  .catch((err) => console.error(err));
+main()
+  .then(() => {
+    console.log("Mongoose Connected");
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+
+async function main() {
+  await mongoose.connect(process.env.MONGO_URL);
+}
 
 const app = express();
 const server = http.createServer(app);
-
-
-const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "https://chat-app-seven-dun.vercel.app",
-    "https://chat-rhd.netlify.app",
-    "https://chatapp-front-062p.onrender.com",
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
-};
-app.use(cors(corsOptions));
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:5173", "https://chat-app-seven-dun.vercel.app", "https://chat-rhd.netlify.app", "https://chatapp-front-062p.onrender.com"],
+    methods: ["GET", "POST"],
+  },
+});
+const router = Router();
 
 app.use(express.json());
-app.use(cookieParser());
 
+// CORS configuration
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://chat-app-seven-dun.vercel.app", "https://chat-rhd.netlify.app", "https://chatapp-front-062p.onrender.com"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
-const verifyToken = (req, res, next) => {
-  console.log("Received Cookies:", req.cookies);
-
-  const token = req.cookies.token;
-  if (!token) {
-    return res.status(401).json({ error: "Unauthorized - No token provided" });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(403).json({ error: "Forbidden - Invalid token" });
-    }
-    req.user = decoded;
-    next();
-  });
-};
-
-
-const io = new Server(server, {
-  cors: corsOptions,
+app.get("/", (req, res) => {
+  res.send("API IS RUNNING");
 });
 
-io.use((socket, next) => {
-  const token = socket.handshake.auth.token;
-  if (!token) {
-    return next(new Error("Authentication error"));
-  }
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    socket.user = decoded;
-    next();
-  } catch (err) {
-    next(new Error("Invalid token"));
-  }
-});
-
-io.on("connection", (socket) => {
-  console.log(`User ${socket.user.userId} connected`);
-
-  socket.on("join_room", (roomID) => {
-    socket.join(roomID);
-    console.log(`User ${socket.user.userId} joined room ${roomID}`);
-  });
-
-  socket.on("message", async (data) => {
-    const { room, message } = data;
-    const sender = socket.user.username;
-
-    const newMessage = new Message({ room, sender, message });
-    try {
-      await newMessage.save();
-      io.to(room).emit("receive_message", { room, sender, message });
-    } catch (error) {
-      console.error("Error saving message:", error);
-    }
-  });
-
-  socket.on("disconnect", () => {
-    console.log(`User ${socket.user.userId} disconnected`);
-  });
-});
-
-
-const router = Router();
 app.use("/api", router);
 
+router.get("/chat", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.json(chats);
+});
+
+router.get("/chat/:id", (req, res) => {
+  const singleChat = chats.find((c) => c._id === req.params.id);
+  res.send(singleChat);
+});
 
 router.post("/register", async (req, res) => {
   const { email, username, password } = req.body;
+
   try {
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-    if (existingUser) return res.status(400).send("User already exists.");
-
+    if (existingUser) {
+      return res.status(400).send("User already exists.");
+    }
     const hashPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ email, username, password: hashPassword });
+
+    const newUser = new User({
+      email,
+      username,
+      password: hashPassword,
+    });
+
     await newUser.save();
 
-    res.status(201).send("User Registered successfully");
+    return res.status(201).send("User Registered successfully");
   } catch (error) {
     console.log(error);
-    res.status(500).send("Server error.");
+    return res.status(500).send("Server error.");
   }
 });
-
 
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password)
+    if (!username || !password) {
       return res.status(400).json({ error: "All fields are required" });
+    }
 
     const user = await User.findOne({ username });
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ error: "Invalid credentials" });
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
 
-    const token = jwt.sign(
-      { userId: user._id, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const token = jwt.sign({ userId: user._id, username: user.username }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
-    res
-      .cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-        maxAge: 3600000, // 1 hour
-      })
-      .status(200)
-      .json({ message: "Login successful" });
+    res.status(200).json({ token });
   } catch (error) {
     console.error("Login Error:", error);
     res
@@ -158,35 +117,61 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.get("/messages/:roomID", verifyToken, async (req, res) => {
+// Middleware to authenticate WebSocket connections
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) {
+    return next(new Error("Authentication error: Token missing"));
+  }
+
   try {
-    const messages = await Message.find({ room: req.params.roomID }).sort(
-      "timestamp"
-    );
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    socket.user = decoded; // Attach user information to the socket
+    next();
+  } catch (error) {
+    return next(new Error("Authentication error: Invalid token"));
+  }
+});
+
+io.on("connection", (socket) => {
+  console.log(`⚡: ${socket.user.username} (${socket.id}) just connected!`);
+
+  socket.on("join_room", (roomID) => {
+    socket.join(roomID);
+    console.log(`${socket.user.username} joined room ${roomID}`);
+  });
+
+  socket.on("message", async (data) => {
+    const { room, message } = data;
+
+    // Validate that the sender matches the authenticated user
+    if (data.sender !== socket.user.username) {
+      console.error("Unauthorized message attempt by:", socket.user.username);
+      return;
+    }
+
+    const newMessage = new Message({ room, sender: socket.user.username, message });
+    try {
+      await newMessage.save();
+      io.to(room).emit("receive_message", { ...newMessage.toObject(), sender: socket.user.username });
+    } catch (error) {
+      console.error("Error saving message:", error);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`🔥: ${socket.user.username} (${socket.id}) disconnected`);
+  });
+});
+
+app.get("/api/messages/:roomID", async (req, res) => {
+  try {
+    const messages = await Message.find({ room: req.params.roomID }).sort("timestamp");
     res.json(messages);
   } catch (error) {
-    res.status(500).send(error);
+    console.error("Error fetching messages:", error);
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
   }
-});
-
-router.get("/user", verifyToken, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.userId).select("-password"); // Exclude password
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    res.json({ username: user.username, email: user.email });
-  } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-router.post("/logout", (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-  }).json({ message: "Logged out successfully" });
 });
 
 server.listen(PORT, () => {
