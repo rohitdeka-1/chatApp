@@ -116,15 +116,22 @@ function Chat() {
             style={{ paddingBottom: isKeyboardOpen ? "120px" : "80px" }}
           >
             {messages.map((msg, index) => (
-              <div key={index} className={`flex flex-col ${msg.sender === user ? "items-end" : "items-start"}`}>
+              <div
+                key={index}
+                className={`flex flex-col ${msg.sender === user ? "items-end" : "items-start"}`}
+              >
                 <div
                   className={`max-w-xs p-3 rounded-lg shadow-lg ${
-                    msg.sender === user ? "bg-blue-500 text-white self-end" : "bg-gray-700 text-gray-200 self-start"
+                    msg.sender === user
+                      ? "bg-blue-500 text-white self-end" // Your messages (right side)
+                      : "bg-gray-700 text-gray-200 self-start" // Received messages (left side)
                   }`}
                 >
                   <p>{msg.message}</p>
                 </div>
-                <span className="text-xs mt-1 text-gray-400">{msg.sender}</span>
+                <span className="text-xs mt-1 text-gray-400">
+                  {msg.sender === user ? "You" : msg.sender} {/* Display "You" for your messages */}
+                </span>
               </div>
             ))}
           </div>
