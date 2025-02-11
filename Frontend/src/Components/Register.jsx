@@ -34,8 +34,8 @@ const Home = () => {
 
       if (response.status === 201) {
         setRegistered(true);
-        localStorage.setItem('username',username)
         setTimeout(() => {
+          localStorage.setItem('username',User.username)
           navigate("/login");
         }, 2000);
       }
