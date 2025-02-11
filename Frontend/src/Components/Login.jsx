@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 
 const Login = ({ setIsLoggedIn }) => {
     const navigate = useNavigate();
@@ -11,56 +10,55 @@ const Login = ({ setIsLoggedIn }) => {
         password: "",
     });
 
+    const [error, setError] = useState("");
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setUser((prev) => ({
             ...prev,
-            [name]: value,
+            [name]: value.trim(),
         }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError("");
+
         try {
             const response = await axios.post(
-                "https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/login", // Replace with your deployed URL
-                User
+                "https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/login",
+                User,
+                { withCredentials: true } // Secure cookie handling
             );
+
             if (response.status === 200) {
-                localStorage.setItem("token", response.data.token);
-                localStorage.setItem('username',User.username
-                );
+                localStorage.setItem("username", User.username);
                 setIsLoggedIn(true);
                 navigate("/chat");
                 console.log("Login Success:", response.data);
             } else {
-                alert("Login failed. Please try again.");
+                setError("Login failed. Please try again.");
             }
         } catch (error) {
             console.error("Login Failed:", error.response?.data || error.message);
-    
-            // Display a user-friendly message based on the error
+
             if (error.response?.status === 401 || error.response?.status === 404) {
-                alert("Invalid username or password.");
+                setError("Invalid username or password.");
             } else if (error.response?.status === 400) {
-                alert("All fields are required.");
+                setError("All fields are required.");
             } else {
-                alert("Something went wrong. Please try again later.");
+                setError("Something went wrong. Please try again later.");
             }
         }
     };
-    
-      
 
     return (
         <div className="min-h-screen background flex justify-center items-center">
-            <div className="mx-10 felx flex-col text-white font-bold text-3xl bg-slate-600 max-w-[600px] w-full min-h-[380px] m-auto rounded-xl ">
-                <div className="flex flex-col p-2 justify-center items-center min-h-[350px] ">
-                    <h1 className="text-2xl font-poppins-400 mb-5 ">LOGIN</h1>
-                    <form
-                        className="flex max-w-[300px] flex-col gap-2"
-                        onSubmit={handleSubmit}
-                    >
+            <div className="mx-10 flex flex-col text-white font-bold text-3xl bg-slate-600 max-w-[600px] w-full min-h-[380px] m-auto rounded-xl">
+                <div className="flex flex-col p-2 justify-center items-center min-h-[350px]">
+                    <h1 className="text-2xl font-poppins-400 mb-5">LOGIN</h1>
+                    {error && <p className="text-red-500 text-sm">{error}</p>}
+                    <form className="flex max-w-[300px] flex-col gap-2" onSubmit={handleSubmit}>
                         <label className="input input-bordered flex items-center gap-2">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -77,6 +75,7 @@ const Login = ({ setIsLoggedIn }) => {
                                 name="username"
                                 onChange={handleChange}
                                 value={User.username}
+                                required
                             />
                         </label>
                         <label className="input input-bordered flex items-center">
@@ -99,11 +98,12 @@ const Login = ({ setIsLoggedIn }) => {
                                 placeholder="Password"
                                 onChange={handleChange}
                                 value={User.password}
+                                required
                             />
                         </label>
                         <button
                             type="submit"
-                            className="bg-slate-300 text-sm rounded h-9 shadrop hover:bg-slate-400"
+                            className="bg-slate-300 text-sm rounded h-9 shadow hover:bg-slate-400"
                         >
                             Submit
                         </button>
@@ -114,7 +114,7 @@ const Login = ({ setIsLoggedIn }) => {
                                 className="font-bold text-[#22c55e] hover:text-[#268e4d]"
                             >
                                 Register
-                            </Link>{" "}
+                            </Link>
                         </p>
                     </form>
                 </div>
