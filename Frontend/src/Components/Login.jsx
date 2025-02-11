@@ -22,23 +22,32 @@ const Login = ({ setIsLoggedIn }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-          const response = await axios.post(
-            // "https://chatapp-bzwq.onrender.com/api/login",
-            "https://chat-rhd-89a61bcf5e5a.herokuapp.com/api/login",
-            // "http://localhost:5000/api/login",
-            User
-          );
+            const response = await axios.post(
+                "http://localhost:5000/api/login", // Replace with your deployed URL
+                User
+            );
             if (response.status === 200) {
                 localStorage.setItem("token", response.data.token);
-                setIsLoggedIn(true); 
-                navigate("/chat"); 
+                setIsLoggedIn(true);
+                navigate("/chat");
+                console.log("Login Success:", response.data);
+            } else {
+                alert("Login failed. Please try again.");
             }
-
-            console.log("Login Success:", response.data);
         } catch (error) {
             console.error("Login Failed:", error.response?.data || error.message);
+    
+            // Display a user-friendly message based on the error
+            if (error.response?.status === 401 || error.response?.status === 404) {
+                alert("Invalid username or password.");
+            } else if (error.response?.status === 400) {
+                alert("All fields are required.");
+            } else {
+                alert("Something went wrong. Please try again later.");
+            }
         }
     };
+    
       
 
     return (
