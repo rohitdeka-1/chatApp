@@ -143,17 +143,19 @@ io.on("connection", (socket) => {
 
   socket.on("message", async (data) => {
     const { room, message } = data;
-
   
-    if (data.sender !== socket.user.username) {
-      console.error("Unauthorized message attempt by:", socket.user.username);
+    // Validate that the sender matches the authenticated user
+    if (!socket.user || !socket.user.username) {
+      console.error("Unauthorized message attempt: User not authenticated");
       return;
     }
-
-    const newMessage = new Message({ room, sender: socket.user.username, message });
+  
+    const sender = socket.user.username; // Use the authenticated user's username
+  
+    const newMessage = new Message({ room, sender, message });
     try {
       await newMessage.save();
-      io.to(room).emit("receive_message", { ...newMessage.toObject(), sender: socket.user.username });
+      io.to(room).emit("receive_message", { room, sender, message });
     } catch (error) {
       console.error("Error saving message:", error);
     }
