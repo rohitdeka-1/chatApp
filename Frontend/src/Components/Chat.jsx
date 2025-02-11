@@ -12,6 +12,8 @@ function Chat() {
   const [inRoom, setInRoom] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const chatContainerRef = useRef(null);
+  const latestMessageRef = useRef(null);
+  const [isUserAtBottom, setIsUserAtBottom] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -30,12 +32,6 @@ function Chat() {
   }, []);
 
   useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  useEffect(() => {
     // Detect keyboard open/close
     const handleResize = () => {
       setIsKeyboardOpen(window.innerHeight < screen.height * 0.75);
@@ -44,6 +40,21 @@ function Chat() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    // Scroll to the latest message only if the user is at the bottom
+    if (isUserAtBottom && latestMessageRef.current) {
+      latestMessageRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
+  const handleScroll = () => {
+    if (chatContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 50;
+      setIsUserAtBottom(isAtBottom);
+    }
+  };
 
   const joinRoom = () => {
     if (roomID) {
@@ -103,15 +114,17 @@ function Chat() {
             SERVER: {roomID}
           </div>
 
-          {/* Chat Messages - Full Screen */}
+          {/* Chat Messages */}
           <div
             ref={chatContainerRef}
             className={`flex-1 overflow-y-auto p-4 space-y-3 ${isKeyboardOpen ? "pb-16" : ""}`}
+            onScroll={handleScroll}
           >
             {messages.map((msg, index) => (
               <div
                 key={index}
                 className={`flex flex-col ${msg.sender === user ? "items-end" : "items-start"}`}
+                ref={index === messages.length - 1 ? latestMessageRef : null} // Latest message reference
               >
                 <div
                   className={`max-w-xs p-3 rounded-lg shadow-lg ${
@@ -128,7 +141,11 @@ function Chat() {
           </div>
 
           {/* Message Input Box */}
-          <div className={`fixed bottom-0 w-full bg-gray-800 p-4 flex gap-2 transition-all ${isKeyboardOpen ? "pb-2" : ""}`}>
+          <div
+            className={`fixed bottom-0 w-full bg-gray-800 p-4 flex gap-2 transition-all ${
+              isKeyboardOpen ? "pb-2" : ""
+            }`}
+          >
             <input
               type="text"
               placeholder="Type a message"
