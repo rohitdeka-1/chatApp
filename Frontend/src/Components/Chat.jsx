@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import axios from "axios";
 
@@ -10,14 +10,15 @@ function Chat() {
   const [newMessage, setNewMessage] = useState("");
   const [user, setUser] = useState("");
   const [inRoom, setInRoom] = useState(false);
+  const chatContainerRef = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      setUser("User" + Math.floor(Math.random() * 1000));
+      const storedUsername = localStorage.getItem("username");
+      setUser(storedUsername);
     }
 
-    // Listen for new messages
     socket.on("receive_message", (data) => {
       setMessages((prevMessages) => [...prevMessages, data]);
     });
@@ -26,6 +27,12 @@ function Chat() {
       socket.off("receive_message");
     };
   }, []);
+
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const joinRoom = () => {
     if (roomID) {
@@ -60,21 +67,21 @@ function Chat() {
   };
 
   return (
-    <div className="min-h-screen background flex justify-center items-center p-4 sm:p-8">
-      <div className="flex flex-col text-white font-bold text-xl bg-slate-600 w-full max-w-lg h-[550px] m-auto p-4 sm:p-6 rounded-xl">
-        <h2 className="text-lg w-full border-b-2 mb-4">Chat Room</h2>
+    <div className="min-h-screen background flex justify-center items-center p-6">
+      <div className="flex flex-col bg-gray-800 w-full max-w-lg h-[600px] rounded-xl shadow-lg">
+        <h2 className="text-lg w-full p-4 border-b-2 text-gray-200 font-semibold">Chat Room</h2>
         {!inRoom ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 p-6">
             <input
               type="text"
               placeholder="Enter Room ID"
               value={roomID}
               onChange={(e) => setRoomID(e.target.value)}
-              className="input input-bordered text-white p-2 rounded-lg"
+              className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               onClick={joinRoom}
-              className="btn btn-primary bg-blue-600 text-white p-3 rounded-lg"
+              className="w-full p-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors"
             >
               Join Room
             </button>
@@ -83,42 +90,41 @@ function Chat() {
           <>
             <div
               id="chat-container"
-              className="flex-1 overflow-y-auto mb-4 max-h-[400px] bg-gray-700 p-2 rounded-lg"
+              ref={chatContainerRef}
+              className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-900 rounded-lg shadow-inner"
             >
               {messages.map((msg, index) => (
                 <div
                   key={index}
-                  className={`mb-2 ${
-                    msg.sender === user ? "text-right" : "text-left"
-                  } flex flex-col`}
+                  className={`flex flex-col ${msg.sender === user ? "items-end" : "items-start"}`}
                 >
-                  <span
-                    className={`text-sm p-2 leading-3 rounded-lg ${
+                  <div
+                    className={`max-w-xs p-3 rounded-lg shadow-lg ${
                       msg.sender === user
-                        ? "bg-[#7d59b6] text-white"
-                        : "bg-[#3cf63c88] text-white"
+                        ? "bg-blue-500 text-white self-end"
+                        : "bg-gray-700 text-gray-200 self-start"
                     }`}
                   >
-                    {msg.message}
-                  </span>
-                  <span className="font-bold text-xs text-gray-300 mt-1">
+                    <p>{msg.message}</p>
+                  </div>
+                  <span className="text-xs mt-1 text-gray-400">
                     {msg.sender}
                   </span>
                 </div>
               ))}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 p-4 bg-gray-800">
               <input
                 type="text"
-                placeholder="Enter Message"
+                placeholder="Type a message"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="input input-bordered flex-1 text-white p-2 rounded-lg"
+                className="flex-1 p-3 rounded-lg bg-gray-700 text-white border border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 onClick={sendMessage}
-                className="btn btn-primary bg-blue-600 text-white p-3 rounded-lg"
+                className="p-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors"
               >
                 Send
               </button>

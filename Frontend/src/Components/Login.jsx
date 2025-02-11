@@ -28,6 +28,8 @@ const Login = ({ setIsLoggedIn }) => {
             );
             if (response.status === 200) {
                 localStorage.setItem("token", response.data.token);
+                localStorage.setItem('username',User.username
+                );
                 setIsLoggedIn(true);
                 navigate("/chat");
                 console.log("Login Success:", response.data);
