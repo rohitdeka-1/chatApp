@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import io from "socket.io-client"
 import axios from "axios"
-import { jwtDecode } from "jwt-decode" // Changed to named import
+import { jwtDecode } from "jwt-decode" 
 
 const socket = io("https://chat-rhd-89a61bcf5e5a.herokuapp.com/", {
   auth: {
@@ -38,7 +38,7 @@ function Chat() {
   useEffect(() => {
     const token = localStorage.getItem("token")
     if (token) {
-      const decodedToken = jwtDecode(token) // Using named import
+      const decodedToken = jwtDecode(token) 
       setUser(decodedToken.username)
     }
 
@@ -70,8 +70,7 @@ function Chat() {
         })
         .catch((err) => console.error("Error fetching messages:", err))
     }
-  }, [roomID, scrollToBottom]) // Removed unnecessary systemMessage dependency
-
+  }, [roomID, scrollToBottom]) 
   const sendMessage = useCallback(
     (e) => {
       e.preventDefault()
