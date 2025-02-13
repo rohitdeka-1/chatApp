@@ -1,8 +1,7 @@
-
 import { useState, useEffect, useRef, useCallback } from "react"
 import io from "socket.io-client"
 import axios from "axios"
-import { jwtDecode } from "jwt-decode" 
+import jwt_decode from "jwt-decode"
 
 const socket = io("https://chat-rhd-89a61bcf5e5a.herokuapp.com/", {
   auth: {
@@ -38,7 +37,7 @@ function Chat() {
   useEffect(() => {
     const token = localStorage.getItem("token")
     if (token) {
-      const decodedToken = jwtDecode(token) 
+      const decodedToken = jwt_decode(token)
       setUser(decodedToken.username)
     }
 
@@ -70,7 +69,7 @@ function Chat() {
         })
         .catch((err) => console.error("Error fetching messages:", err))
     }
-  }, [roomID, scrollToBottom]) 
+  }, [roomID, scrollToBottom])
   const sendMessage = useCallback(
     (e) => {
       e.preventDefault()
